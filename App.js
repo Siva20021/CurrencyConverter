@@ -32,15 +32,15 @@ export default function App() {
       setResult(amount `${toValue}`);
     } else {
       const convertedAmount = amount * exchangeRate[fromValue][toValue];
-      setResult(convertedAmount.toFixed(2) + `${toValue}`);
+      setResult(convertedAmount.toFixed(2) + ` ${toValue}`);
     }
   };
 
   const exchangeRate = {
-    USD: { USD: 1, INR: 74.5, GBP: 0.7, AUD: 1.3 },
-    INR: { USD: 0.013, INR: 1, GBP: 0.007, AUD: 0.013 },
-    GBP: { USD: 1.4, INR: 100, GBP: 1, AUD: 1.8 },
-    AUD: { USD: 0.75, INR: 57, GBP: 0.56, AUD: 1 }
+    USD: { USD: 1, INR: 83.47, GBP: 0.8, AUD: 1.51 },
+    INR: { USD: 0.012, INR: 1, GBP: 0.0095, AUD: 0.018 },
+    GBP: { USD: 1.25, INR: 104.72, GBP: 1, AUD: 1.9 },
+    AUD: { USD: 0.66, INR: 55.19, GBP: 0.53, AUD: 1 }
   };
 
   return (
@@ -51,8 +51,13 @@ export default function App() {
           style={styles.input}
           placeholder="Enter amount"
           keyboardType="numeric"
+          type="number"
           value={amount}
-          onChangeText={text => setAmount(text)}
+          onChangeText={text => {
+            if (/^\d*\.?\d*$/.test(text)) {
+              setAmount(text);
+            }
+          }}
         />
         <View style={styles.currencycontainer}>
           <Dropdown
@@ -164,9 +169,10 @@ const styles = StyleSheet.create({
   },
   button: {
     backgroundColor: '#60a5fa',
-    color: '#ffffff',
+    color: 'rgba(0,0,0,0.9)',
     borderBottomWidth: 4,
-    borderColor: '#93c5fd',
+    borderRightWidth: 4,
+    borderColor: 'rgba(0,0,0,0.5)',
     borderRadius: 8,
     paddingVertical: 12,
     paddingHorizontal: 24,
@@ -178,6 +184,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   activeButton: {
+    borderRightWidth:0,
     borderBottomWidth: 0,
   },
   swapButton: {
