@@ -12,7 +12,8 @@ This project aims to provide a simple yet effective currency conversion tool pow
 
 ## Working Video
 
-[Watch the video demonstration here!]("https://www.loom.com/embed/2e7879c66fb24c4cb60b3b62f58dc040")
+[![Watch the video](https://picjj.com/images/VOu2r.png)](https://www.loom.com/embed/2e7879c66fb24c4cb60b3b62f58dc040)
+
 
 ## Setup
 
