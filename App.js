@@ -1,14 +1,23 @@
-import React, { useState } from 'react';
-import { Button, StatusBar, TextInput, TouchableOpacity,Alert } from 'react-native';
-import { StyleSheet, Text, View } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { Button, TextInput, TouchableOpacity, Alert, Modal, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Dropdown } from 'react-native-element-dropdown';
 import { AntDesign } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
 export default function App() {
   const [amount, setAmount] = useState('');
   const [fromValue, setFromValue] = useState(null);
   const [toValue, setToValue] = useState(null);
   const [isActive, setIsActive] = useState(false);
   const [result, setResult] = useState(null);
+  const [history, setHistory] = useState([]);
+  const [modalVisible, setModalVisible] = useState(false);
+
+  const clearHistory = () => {
+    setHistory([]);
+    AsyncStorage.removeItem('history');
+  };
+  
 
   const data = [
     { label: 'USD', value: 'USD' },
@@ -16,6 +25,29 @@ export default function App() {
     { label: 'GBP', value: 'GBP' },
     { label: 'AUD', value: 'AUD' }
   ];
+
+  const loadHistory = async () => {
+    try {
+      const storedHistory = await AsyncStorage.getItem('history');
+      if (storedHistory) {
+        setHistory(JSON.parse(storedHistory));
+      }
+    } catch (error) {
+      console.error('Error loading history from AsyncStorage:', error);
+    }
+  };
+
+  useEffect(() => {
+    loadHistory();
+  }, []);
+
+  const saveHistory = async () => {
+    try {
+      await AsyncStorage.setItem('history', JSON.stringify(history));
+    } catch (error) {
+      console.error('Error saving history to AsyncStorage:', error);
+    }
+  };
 
   const swapCurrencies = () => {
     const temp = fromValue;
@@ -28,12 +60,11 @@ export default function App() {
       Alert.alert('Validation Error', 'Amount, From Currency, and To Currency are required.');
       return;
     }
-    if (fromValue === toValue) {
-      setResult(amount `${toValue}`);
-    } else {
-      const convertedAmount = amount * exchangeRate[fromValue][toValue];
-      setResult(convertedAmount.toFixed(2) + ` ${toValue}`);
-    }
+    const convertedAmount = fromValue === toValue ? amount : amount * exchangeRate[fromValue][toValue];
+    const historyItem = { from: fromValue, to: toValue, amount: amount, result: convertedAmount.toFixed(2) };
+    setHistory([...history, historyItem]);
+    setResult(`${convertedAmount.toFixed(2)} ${toValue}`);
+    saveHistory();
   };
 
   const exchangeRate = {
@@ -51,7 +82,6 @@ export default function App() {
           style={styles.input}
           placeholder="Enter amount"
           keyboardType="numeric"
-          type="number"
           value={amount}
           onChangeText={text => {
             if (/^\d*\.?\d*$/.test(text)) {
@@ -60,7 +90,7 @@ export default function App() {
           }}
         />
         <View style={styles.currencycontainer}>
-          <Dropdown
+        <Dropdown
             style={styles.dropdownInput}
             placeholderStyle={styles.placeholderStyle}
             selectedTextStyle={styles.selectedTextStyle}
@@ -105,18 +135,46 @@ export default function App() {
         <TouchableOpacity
           style={[styles.button, isActive && styles.activeButton]}
           activeOpacity={0.9}
-          onPressIn={() => setIsActive(true)}
-          onPressOut={() => setIsActive(false)}
           onPress={convert}>
           <Text style={styles.buttonText}>Convert</Text>
         </TouchableOpacity>
+        <TouchableOpacity>
+          <Button title="History" onPress={() => setModalVisible(true)} />
+        </TouchableOpacity>
       </View>
-      {/* Render the result if it exists */}
+      
       {result !== null && (
         <View style={styles.resultContainer}>
           <Text style={styles.resultText}>Result: {result}</Text>
         </View>
       )}
+
+      
+      <Modal transparent={true} visible={modalVisible} onRequestClose={() => setModalVisible(false)}>
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>History</Text>
+            <ScrollView style={styles.historyContainer}>
+              {history.map((item, index) => (
+                <View key={index} style={styles.historyItem}>
+                  <Text>From: {item.from}</Text>
+                  <Text>To: {item.to}</Text>
+                  <Text>Amount: {item.amount}</Text>
+                  <Text>Result: {item.result}</Text>
+                </View>
+              ))}
+            </ScrollView>
+            <TouchableOpacity
+              style={styles.button}
+              onPress={clearHistory}>
+              <Text style={styles.buttonText}>Clear History</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.closeButton} onPress={() => setModalVisible(false)}>
+              <Text style={styles.closeButtonText}>Close</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -198,5 +256,53 @@ const styles = StyleSheet.create({
   resultText: {
     fontSize: 18,
     fontWeight: 'bold',
+  },
+
+  // Styles for the Modal
+  modalContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  modalContent: {
+    backgroundColor: '#fff',
+    width: '80%',
+    maxHeight: '80%',
+    borderRadius: 10,
+    padding: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 10,
+  },
+  historyContainer: {
+    width: '100%',
+    maxHeight: '80%',
+  },
+  historyItem: {
+    backgroundColor: 'rgba(0,0,0,0.1)',
+    borderWidth:1,
+    padding: 10,
+    width:"100%",
+    borderRadius:10,
+    marginBottom: 10,
+  },
+  closeButton: {
+    top:0,
+    right:0,
+    backgroundColor: '#60a5fa',
+    paddingVertical: 10,
+    position: 'absolute',
+    paddingHorizontal: 20,
+    borderRadius: 5,
+  },
+  closeButtonText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#fff',
   },
 });
