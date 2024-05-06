@@ -12,7 +12,7 @@ This project aims to provide a simple yet effective currency conversion tool pow
 
 ## Working Video
 
-<iframe width="560" height="315" src="https://www.loom.com/embed/2e7879c66fb24c4cb60b3b62f58dc040" frameborder="0" allowfullscreen></iframe>
+[Watch the video demonstration here!]("https://www.loom.com/embed/2e7879c66fb24c4cb60b3b62f58dc040")
 
 ## Setup
 
